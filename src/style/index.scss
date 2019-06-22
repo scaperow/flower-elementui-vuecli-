@@ -1,0 +1,37 @@
+@import "./scrollbar.css";
+
+body,
+html {
+  height: 100%;
+  min-height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+* {
+  letter-spacing: 1px;
+}
+
+[v-cloak] {
+  display: none;
+}
+.text-center {
+  text-align: center;
+}
+// .el-input__inner,
+// .el-textarea__inner {
+//   border: none;
+//   border-radius: 20px;
+//   background: #f3f3f3;
+//   transition: all 0.3s;
+
+//   &:focus {
+//     background: #fff;
+//     border: solid 1px #f0f0f0;
+//     box-shadow: 2px 2px 6px -2px #c3c3c3;
+//   }
+// }
+
+// .el-textarea__inner {
+//   border-bottom-right-radius: 0;
+// }
