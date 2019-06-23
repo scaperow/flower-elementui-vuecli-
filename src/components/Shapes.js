@@ -11,32 +11,32 @@ let shapes = []
 let map = new Go.Map()
 let eventListeners = {}
 let nodeSelectionAdornmentTemplate =
-  $(go.Adornment, "Auto",
-    $(go.Shape, { fill: null, stroke: "deepskyblue", strokeWidth: 1.5, strokeDashArray: [4, 2] }),
+  $(go.Adornment, "Auto", { cursor: 'move' },
+    $(go.Shape, { fill: null, stroke: "deepskyblue", strokeWidth: 1, strokeDashArray: [4, 2] }),
     $(go.Placeholder)
   )
 
 let nodeRotateAdornmentTemplate =
   $(go.Adornment,
-    { locationSpot: go.Spot.Center, locationObjectName: "CIRCLE", cursor: '' },
-    $(go.Shape, "Circle", { name: "CIRCLE", cursor: "pointer", desiredSize: new go.Size(7, 7), fill: "lightblue", stroke: "deepskyblue" }),
-    // $(go.Shape, { geometryString: "M3.5 7 L3.5 30", isGeometryPositioned: true, stroke: "deepskyblue", strokeWidth: 1.5, strokeDashArray: [4, 2] })
-  );
+    { locationSpot: go.Spot.Center, locationObjectName: "CIRCLE", cursor: 'pointer' },
+    $(go.Shape, "Diamond", { cursor: "pointer", desiredSize: new go.Size(12, 12), fill: "white", stroke: "deepskyblue" }),
+    $(go.Shape, { geometryString: "M6 12 L6 45", isGeometryPositioned: true, stroke: "deepskyblue", strokeWidth: 1.5, strokeDashArray: [4, 2] })
+  )
 
 let nodeResizeAdornmentTemplate =
   $(go.Adornment, "Spot",
     { locationSpot: go.Spot.Right },
     $(go.Placeholder),
-    $(go.Shape, { alignment: go.Spot.TopLeft, cursor: "nw-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
-    $(go.Shape, { alignment: go.Spot.Top, cursor: "n-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
-    $(go.Shape, { alignment: go.Spot.TopRight, cursor: "ne-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.TopLeft, cursor: "nw-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.Top, cursor: "n-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.TopRight, cursor: "ne-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
 
-    $(go.Shape, { alignment: go.Spot.Left, cursor: "w-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
-    $(go.Shape, { alignment: go.Spot.Right, cursor: "e-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.Left, cursor: "w-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.Right, cursor: "e-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
 
-    $(go.Shape, { alignment: go.Spot.BottomLeft, cursor: "se-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
-    $(go.Shape, { alignment: go.Spot.Bottom, cursor: "s-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
-    $(go.Shape, { alignment: go.Spot.BottomRight, cursor: "sw-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" })
+    $(go.Shape, { alignment: go.Spot.BottomLeft, cursor: "se-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.Bottom, cursor: "s-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" }),
+    $(go.Shape, { alignment: go.Spot.BottomRight, cursor: "sw-resize", desiredSize: new go.Size(9, 9), fill: "white", stroke: "deepskyblue" })
   );
 
 
@@ -104,6 +104,151 @@ const createListener = function (part, key, eventName, handler) {
   }
 }
 
+
+/**
+ * 
+ * @param {String} layout 
+ * @returns {GraphObject} container
+ */
+const createNode = function (node, itemBinding, ...ports) {
+  let portSize = new go.Size(10, 10)
+  let container = $(go.Node, 'Table', {
+    background: 'transparent',
+    cursor: 'move',
+    locationObjectName: "NODE",
+    locationSpot: go.Spot.Center,
+    selectable: true,
+    selectionAdornmentTemplate: nodeSelectionAdornmentTemplate,
+    selectionObjectName: 'NODE',
+    resizable: true,
+    resizeObjectName: 'NODE',
+    resizeAdornmentTemplate: nodeResizeAdornmentTemplate,
+    rotatable: true,
+    rotateAdornmentTemplate: nodeRotateAdornmentTemplate,
+    toolTip: toolTips.shapeName,
+    mouseEnter (event, node) {
+      node.part.ports.each((port) => {
+        port.opacity = 1
+
+      })
+    },
+    mouseLeave (event, node) {
+      node.part.ports.each((port) => {
+        port.opacity = 0
+      })
+    },
+    doubleClick (event, node) {
+      var text = node.part.findObject('TEXT');
+      if (text) {
+        node.diagram.commandHandler.editTextBlock(text);
+      }
+    }
+  },
+    node,
+    $(go.Panel,
+      {
+        row: 1,
+        column: 0,
+        _side: "left",
+        cursor: "pointer",
+      },
+      $(go.Shape, "Circle",
+        {
+          fromSpot: go.Spot.Left,
+          toSpot: go.Spot.Left,
+          fromLinkable: true,
+          toLinkable: true,
+          portId: 'LEFT',
+          name: 'PORT',
+          stroke: null, strokeWidth: 0,
+          desiredSize: portSize,
+          fill: 'red',
+          opacity: 0
+        }
+      )),
+    $(go.Panel,
+      {
+        row: 1,
+        column: 2,
+        _side: "left",
+        cursor: "pointer",
+      },
+      $(go.Shape, "Circle",
+        {
+          fromSpot: go.Spot.Right,
+          toSpot: go.Spot.Right,
+          fromLinkable: true,
+          toLinkable: true,
+          portId: 'RIGHT',
+          name: 'PORT',
+          stroke: null, strokeWidth: 0,
+          desiredSize: portSize,
+          fill: 'red',
+          opacity: 0
+        }
+      )),
+    $(go.Panel,
+      {
+        row: 0,
+        column: 1,
+        _side: "left",
+        cursor: "pointer"
+      },
+      $(go.Shape, "Circle",
+        {
+          fromSpot: go.Spot.Top,
+          toSpot: go.Spot.Top,
+          fromLinkable: true,
+          toLinkable: true,
+          portId: 'TOP',
+          name: 'PORT',
+          stroke: null, strokeWidth: 0,
+          desiredSize: portSize,
+          fill: 'red',
+          opacity: 0
+        }
+      )),
+    $(go.Panel,
+      {
+        row: 2,
+        column: 1,
+        _side: "left",
+        cursor: "pointer",
+      },
+      $(go.Shape, "Circle",
+        {
+          fromSpot: go.Spot.Bottom,
+          toSpot: go.Spot.Bottom,
+          fromLinkable: true,
+          toLinkable: true,
+          opacity: 0,
+          portId: 'BOTTOM',
+          name: 'PORT',
+          stroke: null, strokeWidth: 0,
+          desiredSize: portSize,
+          fill: 'red',
+          opacity: 0
+        }
+      )))
+
+
+  // if (ports.length > 0) {
+  //   _.each(ports, (port) => {
+
+  //   })
+
+  //   createListener(options, 'CONTAINER', 'mouseEnter', (e, node) => {
+  //     showSmallPorts(node, true)
+  //   })
+
+  //   createListener(options, 'CONTAINER', 'mouseEnter', (e, node) => {
+  //     showSmallPorts(node, false)
+  //   })
+  // }
+
+  return container
+}
+
 /**
  * 
  * @param {*} part 
@@ -114,43 +259,6 @@ const removeListener = function (key, eventName, handler) {
   _.pull((eventListeners, `${key}.${eventName}.listeners`) || [], handler)
 }
 
-/**
- * 
- * @param {String} layout 
- * @returns {GraphObject} container
- */
-const createNode = function (node) {
-  let options = {
-    locationSpot: 'Table',
-    selectable: true,
-    selectionAdornmentTemplate: nodeSelectionAdornmentTemplate,
-    resizable: true,
-    resizeObjectName: 'NODE',
-    resizeAdornmentTemplate: nodeResizeAdornmentTemplate,
-    rotatable: true,
-    rotateAdornmentTemplate: nodeRotateAdornmentTemplate,
-    cursor: 'move',
-    toolTip: toolTips.shapeName
-  }
-
-  let container = $(go.Node, 'Table', options)
-
-  if (ports.length > 0) {
-    _.each(ports, (port) => {
-
-    })
-
-    createListener(options, 'CONTAINER', 'mouseEnter', (e, node) => {
-      showSmallPorts(node, true)
-    })
-
-    createListener(options, 'CONTAINER', 'mouseEnter', (e, node) => {
-      showSmallPorts(node, false)
-    })
-  }
-
-  return container
-}
 
 const showSmallPorts = function (node, show) {
   if (node.diagram && !node.diagram.isReadOnly) {
@@ -199,6 +307,7 @@ const makeEmptyChildBinding = function (...names) {
   })
 }
 
+/*
 map.add('Shape',
   $(Go.Node, "Auto", {
     resizable: true, width: 60, height: 60,
@@ -231,6 +340,7 @@ map.add('Shape',
     makePort("R", Go.Spot.Right, true, true),
     makePort("B", Go.Spot.Bottom, true, false)
   ))
+*/
 
 map.add('Picture',
   $(go.Node, "ViewBox", {
@@ -282,7 +392,7 @@ map.add('Picture',
     makePort("B", Go.Spot.Bottom, true, false)
   ))
 
-
+/*
 map.add('ColorCanvas',
   $(go.Node, "Spot",
     {
@@ -333,9 +443,9 @@ map.add('ColorCanvas',
     makePort("R", go.Spot.Right, true, true),
     makePort("B", go.Spot.Bottom, true, false)
   ))
+*/
 
-
-
+/*
 map.add('MonoCanvas',
   $(go.Node, "Spot",
     {
@@ -382,16 +492,89 @@ map.add('MonoCanvas',
     makePort("R", go.Spot.Right, true, true),
     makePort("B", go.Spot.Bottom, true, false)
   ))
+*/
 
-map.add('MonoCanvas1',
-  createContainer($(Go.Panel, "Auto",
+
+
+map.add('Shape',
+  createNode($(go.Panel, 'Auto',
+    {
+      row: 1,
+      column: 1,
+      width: 80,
+      height: 80,
+      name: 'NODE',
+      stretch: go.GraphObject.Fill,
+      background: 'transparent',
+    },
     $(Go.Shape, {
       fill: "#fff",
       cursor: 'move'
-    },
-      ...makeEmptyBinding(false, 'stroke', 'figure', 'strokeWidth', 'opacity', 'fill'))
+    }, ...makeEmptyBinding(false, 'figure')),
+    $(go.TextBlock, { text: '', name: 'TEXT', verticalAlignment: go.Spot.Center, alignment: go.Spot.Center }, ...makeEmptyBinding('text', 'size'))
   ))
 )
+
+
+map.add('MonoCanvas',
+  createNode(
+    $(go.Panel, 'ViewBox',
+      {
+        name: 'NODE',
+        row: 1,
+        column: 1,
+        width: 80,
+        height: 80,
+        stretch: go.GraphObject.Fill,
+        background: 'transparent',
+      },
+      $(go.Panel,
+        {
+          width: 1024,
+          height: 1024,
+          itemTemplate:
+            $(go.Panel,
+              $(go.Shape,
+                ...makeEmptyBinding(false, 'strokeWidth', 'opacity', 'fill', 'geometryString', 'strokeDashArray', 'stroke')
+              )
+            )
+        },
+        new go.Binding("itemArray").makeTwoWay(),
+        ...makeEmptyChildBinding('fill', 'opacity', 'opacity', 'strokeWidth', 'strokeDashArray', 'stroke')
+      )
+    )
+  )
+)
+
+map.add('ColorCanvas',
+  createNode(
+    $(go.Panel, 'ViewBox',
+      {
+        row: 1,
+        column: 1,
+        width: 80,
+        height: 80,
+        name: 'NODE',
+        stretch: go.GraphObject.Fill,
+        background: 'transparent',
+      },
+      $(go.Panel,
+        {
+          width: 1024,
+          height: 1024,
+          itemTemplate:
+            $(go.Panel,
+              $(go.Shape,
+                ...makeEmptyBinding(false, 'strokeWidth', 'opacity', 'fill', 'geometryString', 'strokeDashArray', 'stroke')
+              )
+            )
+        },
+        new go.Binding("itemArray").makeTwoWay(),
+        ...makeEmptyChildBinding('fill', 'opacity', 'opacity', 'strokeWidth', 'strokeDashArray', 'stroke')
+      ))
+  )
+)
+
 
 export {
   map,

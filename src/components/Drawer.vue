@@ -190,8 +190,6 @@
 
 <script>
 import Go, { Picture } from 'gojs'
-import FoMenu from '@/grapheditor/com/Menu'
-import FoSidebar from '@/grapheditor/com/Sidebar'
 import ResizeTool from './ResizeTool'
 import { map, contextMenus, groupTemplate } from './Shapes.js'
 import ShapeBar from './ShapeBar'
@@ -199,6 +197,7 @@ import FileSaver from 'file-saver'
 import SettingBar from './SettingBar'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
+import GuidedDraggingTool from '@/ext/GuidedDraggingTool.js'
 
 const { GraphObject } = Go
 const { make: $ } = GraphObject
@@ -361,7 +360,7 @@ export default {
     }
   },
   components: {
-    FoMenu, FoSidebar, ShapeBar, SettingBar
+    ShapeBar, SettingBar
   },
   watch: {
     statusMessage (val) {
@@ -508,6 +507,14 @@ export default {
 
   },
   mounted () {
+
+    var linkSelectionAdornmentTemplate =
+      $(go.Adornment, "Link",
+        $(go.Shape,
+          // isPanelMain declares that this Shape shares the Link.geometry
+          { isPanelMain: true, fill: null, stroke: "deepskyblue", strokeWidth: 0 })
+      );
+
     $canvas =
       $(Go.Diagram, "drawer",  // must name or refer to the DIV HTML element
         {
@@ -515,6 +522,36 @@ export default {
           grid: grid,
           minScale: 0.01,
           maxScale: 100,
+          linkTemplate: $(go.Link,  // the whole link panel
+            { selectable: true, selectionAdornmentTemplate: linkSelectionAdornmentTemplate },
+            { relinkableFrom: true, relinkableTo: true, reshapable: true },
+            {
+              routing: go.Link.AvoidsNodes,
+              curve: go.Link.JumpOver,
+              corner: 5,
+              toShortLength: 4
+            },
+            new go.Binding("points").makeTwoWay(),
+            $(go.Shape,  // the link path shape
+              { isPanelMain: true, strokeWidth: 2 }),
+            $(go.Shape,  // the arrowhead
+              { toArrow: "Standard", stroke: null }),
+            $(go.Panel, "Auto",
+              new go.Binding("visible", "isSelected").ofObject(),
+              $(go.Shape, "RoundedRectangle",  // the link shape
+                { fill: "#F8F8F8", stroke: null }),
+              $(go.TextBlock,
+                {
+                  textAlign: "center",
+                  font: "10pt helvetica, arial, sans-serif",
+                  stroke: "#919191",
+                  margin: 2,
+                  minSize: new go.Size(10, NaN),
+                  editable: true
+                },
+                new go.Binding("text").makeTwoWay())
+            )
+          ),
           groupTemplate: $(Go.Group, "Spot",
             {
               selectionAdornmentTemplate: // adornment when a group is selected
@@ -552,8 +589,31 @@ export default {
           resizingTool: new ResizeTool(),
           "LinkDrawn": showLinkLabel,  // this DiagramEvent listener is defined below
           "LinkRelinked": showLinkLabel,
-          "undoManager.isEnabled": true  // enable undo & redo
+          "undoManager.isEnabled": true,  // enable undo & redo
+          draggingTool: new GuidedDraggingTool(),
+          "draggingTool.dragsLink": true,
+          "draggingTool.isGridSnapEnabled": true,
+          "draggingTool.horizontalGuidelineColor": "blue",
+          "draggingTool.verticalGuidelineColor": "blue",
+          "draggingTool.centerGuidelineColor": "green",
+          "draggingTool.guidelineWidth": 1,
+          "linkingTool.isUnconnectedLinkValid": true,
+          "linkingTool.portGravity": 20,
+          "relinkingTool.isUnconnectedLinkValid": true,
+          "relinkingTool.portGravity": 20,
+          "relinkingTool.fromHandleArchetype":
+            $(go.Shape, "Diamond", { segmentIndex: 0, cursor: "pointer", desiredSize: new go.Size(8, 8), fill: "tomato", stroke: "deepskyblue" }),
+          "relinkingTool.toHandleArchetype":
+            $(go.Shape, "Diamond", { segmentIndex: -1, cursor: "pointer", desiredSize: new go.Size(8, 8), fill: "darkred", stroke: "tomato" }),
+          "linkReshapingTool.handleArchetype":
+            $(go.Shape, "Diamond", { desiredSize: new go.Size(7, 7), fill: "lightblue", stroke: "deepskyblue" }),
+          "rotatingTool.handleAngle": 270,
+          "rotatingTool.handleDistance": 30,
+          "rotatingTool.snapAngleMultiple": 15,
+          "rotatingTool.snapAngleEpsilon": 15,
+          "undoManager.isEnabled": true,
         });
+
 
     /*
     $canvas.nodeTemplateMap.add('Picture', $(go.Part, { resizable: true, resizeObjectName: "PICTURE" },
@@ -612,7 +672,7 @@ export default {
           //console.log(event.diagram.selection)
           var groups = event.diagram.selection.filter((item) => {
             //console.log(_.has(item.data, 'group'))
-            var nodeData = console.log(event.diagram.model.findNodeDataForKey(item.key))
+            var nodeData = event.diagram.model.findNodeDataForKey(item.key)
             return _.has(nodeData, 'group')
           })
 

@@ -55,20 +55,15 @@
 
 <script>
 import { mapGetters } from "vuex";
-import Editor from "./components/Editor";
 import Login from "./components/Login";
 
 export default {
   name: "app",
   components: {
-    Editor,
     Login
   },
   computed: {
-    ...mapGetters({ user: "user/user" }),
-    isEditing () {
-      return this.$route.path === "/editor";
-    }
+    ...mapGetters({ user: "user/user" })
   },
   methods: {
     clickMenu (command) {

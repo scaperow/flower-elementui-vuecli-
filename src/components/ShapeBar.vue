@@ -85,8 +85,6 @@
 
 <script>
 import Go, { Shape } from 'gojs'
-import FoMenu from '@/grapheditor/com/Menu'
-import FoSidebar from '@/grapheditor/com/Sidebar'
 import ResizeTool from './ResizeTool'
 import { map, createShape, on, off } from './Shapes.js'
 import Parse from 'parse'
@@ -129,8 +127,7 @@ let groupMap = [];
 
 export default {
   components: {
-    FoMenu,
-    FoSidebar, ImageModal
+    ImageModal
   },
   data () {
     return {
