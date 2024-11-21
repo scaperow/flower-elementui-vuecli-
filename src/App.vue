@@ -1,7 +1,8 @@
 <template>
   <div id="app">
-    <router-view></router-view>
-    <!-- <el-container>
+    <v-app>
+      <router-view></router-view>
+      <!-- <el-container>
       <el-header>
         <el-row>
           <el-col style="text-align:left"
@@ -50,6 +51,7 @@
       <el-footer></el-footer>
       <login></login>
     </el-container> -->
+    </v-app>
   </div>
 </template>
 
@@ -68,12 +70,6 @@ export default {
   methods: {
     clickMenu (command) {
       this.$options.methods[command].apply(this);
-    },
-    changePassword () {
-      this.$bus.emit("userAction:changePassword");
-    },
-    logout () {
-      this.$bus.emit("userAction:logout");
     }
   }
 };
@@ -86,37 +82,5 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   height: 100%;
-
-  .create-button {
-    transition: all 0.3s;
-    font-size: 32px;
-    &.tip {
-      margin-top: 36px;
-    }
-  }
-
-  .el-container {
-    height: 100vh;
-    // .el-header {
-    //   border-bottom-left-radius: 12px;
-    //   border-bottom-right-radius: 12px;
-    //   background: #fff;
-    //   margin: 0 30px;
-    //   height: 120px;
-    // }
-
-    // .el-main {
-    //   border-top-left-radius: 12px;
-    //   border-top-right-radius: 12px;
-    //   background: #fff;
-    //   margin: 0 30px;
-    //   margin-top: 12px;
-    // }
-
-    // .el-footer {
-    //   background: #fff;
-    //   margin: 0 30px;
-    // }
-  }
 }
 </style>

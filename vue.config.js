@@ -1,7 +1,8 @@
 'use strict'
 const path = require('path')
+const utils = require('./build/utils')
 
-function resolve(dir) {
+function resolve (dir) {
   return path.join(__dirname, dir)
 }
 
@@ -13,18 +14,40 @@ const port = 9527 // dev port
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {
-  /**
-   * You will need to set publicPath if you plan to deploy your site under a sub path,
-   * for example GitHub Pages. If you plan to deploy your site to https://foo.github.io/bar/,
-   * then publicPath should be set to "/bar/".
-   * In most cases please use '/' !!!
-   * Detail: https://cli.vuejs.org/config/#publicpath
-   */
-  publicPath: '/',
-  outputDir: 'dist',
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
+  pages: {
+    offical: {
+      // page 的入口
+      entry: 'src/offical.js',
+      // 模板来源
+      template: 'public/offical.html',
+      filename: 'offical.html',
+      // 当使用 title 选项时，
+      title: '蓝图巴巴',
+      chunks: ['chunk-vendors', 'chunk-common', 'offical']
+    },
+    app: {
+      entry: 'src/app.js',
+      template: 'public/app.html',
+      title: '蓝图巴巴',
+      chunks: ['chunk-vendors', 'chunk-common', 'app']
+    },
+    share: {
+      entry: 'src/share.js',
+      template: 'public/share.html',
+      title: '蓝图巴巴',
+      chunks: ['chunk-vendors', 'chunk-common', 'share']
+    },
+    manager: {
+      entry: 'src/manager.js',
+      template: 'public/manager.html',
+      title: '蓝图巴巴管理后台',
+      chunks: ['chunk-vendors', 'chunk-common', 'manager']
+    }
+  },
+
   devServer: {
     port: port,
     open: true,
@@ -41,22 +64,28 @@ module.exports = {
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''
         }
-      }
+      },
+
     }
   },
+
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
     // it can be accessed in index.html to inject the correct title.
     name: name,
     resolve: {
       alias: {
-        '@': resolve('src')
+        '@': resolve('src'),
+        '~': resolve('/')
       }
-    }
+    },
+    entry: utils.entries()
   },
-  chainWebpack(config) {
+
+  chainWebpack (config) {
     config.plugins.delete('preload') // TODO: need test
     config.plugins.delete('prefetch') // TODO: need test
+
 
     // set svg-sprite-loader
     config.module
@@ -106,7 +135,7 @@ module.exports = {
             .plugin('ScriptExtHtmlWebpackPlugin')
             .after('html')
             .use('script-ext-html-webpack-plugin', [{
-            // `runtime` must same as runtimeChunk name. default is `runtime`
+              // `runtime` must same as runtimeChunk name. default is `runtime`
               inline: /runtime\..*\.js$/
             }])
             .end()
@@ -137,5 +166,7 @@ module.exports = {
           config.optimization.runtimeChunk('single')
         }
       )
-  }
+  },
+
+  runtimeCompiler: true
 }

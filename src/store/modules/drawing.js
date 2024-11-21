@@ -1,86 +1,50 @@
 import Go from 'gojs'
+import Parse from 'parse'
 import _ from 'lodash'
+
 const state = {
-  status: null,
-  canvas: null,
-  selection: [],
-  setting: {
-    // page setting
-    root: {
-      direction: 'H',
-      size: null,
-      units: 'px',
-      showRule: true,// 是否显示参考线
-      showMesh: true,// 是否显示网格
-      meshColor: '#409EFF',
-      ruleColor: '#000',
-      background: '#fff'
-    },
-    // default setting
-    common: {
-      fontSize: '12px'
-    },
-    canvas: {
-    },
-    shape: {
-    },
-  }
+  map: null,
+  mapSource: null,
+  mapData: null,
+  history: null
 }
 
 // getters
 const getters = {
-  status: (state, getters) => {
-    return state.status
-  },
-  setting: (state) => {
-    return state.setting
-  },
-  selection: (state) => {
-    return state.selection
-  },
-  canvas: (state) => {
-    return state.canvas
-  }
+  map: (state) => state.map,
+  mapSource: (state) => state.mapSource,
+  mapData: (state) => state.mapData,
+  history: (state) => state.history
 }
 
-// actions
 const actions = {
-  command ({ state, commit }, commander) {
+  setMap ({ state, commit }, map) {
+    commit('SET_MAP', map)
+  },
 
+  setMapSource ({ state, commit }, source) {
+    commit('SET_MAP_SOURCE', source)
   },
-  /**
-   * 改变工具栏状态
-   * @param {*} param0 
-   * @param {*} status 
-   */
-  setStatus ({ state, commit }, status) {
-    commit('SET_STATUS', status)
-  },
-  setSetting ({ state, commit }, set) {
-    commit('SET_SETTING', set)
-  },
-  setCanvas ({ state, commit }, canvas) {
-    commit('SET_CANVAS', canvas)
-  },
-  setSelection ({ state, commit }, selection) {
-    commit('SET_SELECTION', selection)
+
+  setHistory ({ state, commit }, history) {
+    commit('SET_HISTORY', history)
   }
 }
+
 
 // mutations
 const mutations = {
-  SET_SETTING (state, set) {
-    _.each(set, (value, key) => _.set(state.setting, key, value))
-    //state.setting = Object.assign(state.setting, set)
+  SET_MAP (state, map) {
+    state.map = map
   },
-  SET_CANVAS (state, status) {
-    state.canvas = status
+
+  SET_MAP_SOURCE (state, source) {
+    state.mapSource = source
+    state.mapData = source.toJSON()
   },
-  SET_SELECTION (state, selection) {
-    state.selection = selection
-  },
-  SET_CANVAS (state, canvas) {
-    state.canvas = canvas
+
+  SET_HISTORY (state, source) {
+    state.history = source
   }
 }
 

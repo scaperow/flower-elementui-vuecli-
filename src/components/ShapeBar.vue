@@ -1,102 +1,69 @@
 <template>
-  <div class="shape-bar">
-    <div class="tool">
+  <section class="shape-bar">
+    <!-- <div class="tool">
       <i title="添加图形"
          @click="handleCreateShape"
          class="fa fa-plus"></i>
       <i title="上传图片图形"
          @click="handleUpload"
          class="fa fa-cloud-upload"></i>
-    </div>
-    <el-tabs @tab-click="onChangeTab"
-             v-loading="allCategories.length === 0">
-      <el-tab-pane label="所有图形">
-        <el-collapse @change="onChange"
-                     v-model="selectCategories">
+    </div> -->
+    <!-- <el-button></el-button> -->
+
+    <div class="tabs">
+      <button class="tab"
+              :class="{'is-active':selectTab === 'SHAPES'}"
+              @click="selectTab='SHAPES'">所有图形</button>
+      <button class="tab"
+              :class="{'is-active':selectTab === 'PICTURES'}"
+              @click="onChangeTab">我上传的</button>
+      <div class="tab"
+           v-show="selectTab === 'SHAPES'">
+        <el-collapse @change="onChangeCollapse"
+                     v-model="expandCategory">
           <el-collapse-item v-for="(category,index) in categories"
                             :key=index
                             :title="category.name"
                             :name="category.objectId">
             <div style="width:300px;height:300px"
                  :id="`plette_${category.objectId}`"></div>
-            <div class="text-center">
+            <!-- <div class="text-center">
               <el-tooltip content="显示更多">
                 <el-button round
                            class="more"
                            type="text"
                            icon="fa fa-arrow-circle-down"
-                           v-show="!$get(category,'$viewTag.hasNoMore')"
-                           :loading="$get(category, '$viewTag.isLoading')"
+                           v-show="!_get(category,'$viewTag.hasNoMore')"
+                           :loading="_get(category, '$viewTag.isLoading')"
                            @click="showMore(category)"></el-button>
               </el-tooltip>
-            </div>
+            </div> -->
           </el-collapse-item>
         </el-collapse>
-      </el-tab-pane>
-      <el-tab-pane label="我上传的">
+      </div>
+      <div class="tab"
+           v-show="selectTab === 'PICTURES'">
         <div style="width:300px;height:300px"
              id="picture_palette"></div>
-      </el-tab-pane>
-    </el-tabs>
-    <el-dialog :visible.sync="isCreateShape"
-               width="50%">
-      <el-form v-model="shapeModel">
-        <el-form-item label="Name">
-          <el-input v-model="shapeModel.name"></el-input>
-        </el-form-item>
+      </div>
+    </div>
 
-        <el-form-item label="Category">
-          <div>
-            <el-radio v-model="shapeModel.category"
-                      label="Shape">Shape</el-radio>
-            <el-radio v-model="shapeModel.category"
-                      label="Picture">Picture</el-radio>
-          </div>
-        </el-form-item>
-        <el-form-item label="Shape Category">
-          <el-checkbox-group v-model="checkCategories">
-            <el-checkbox v-for="(item,index) in allCategories"
-                         :label="item.id"
-                         :key="index">{{item.attributes.name}}</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-
-        <el-form-item label="Meta Data">
-          <el-input type="textarea"
-                    v-model="shapeMetadata"></el-input>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary"
-                     @click="handleSaveShape">Save</el-button>
-          <el-button @click="shapeModel = {}">Reset</el-button>
-        </el-form-item>
-
-        <el-form-item>
-          <el-input v-model="createCategoryName"></el-input>
-          <el-button type="text"
-                     @click="handleSaveCategory">Create new Category</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
-    <image-modal ref="imageModal"></image-modal>
-  </div>
+    <picture-create ref="imageModal"></picture-create>
+  </section>
 </template>
 
 <script>
-import Go, { Shape } from 'gojs'
-import ResizeTool from './ResizeTool'
-import { map, createShape, on, off } from './Shapes.js'
+import Go from 'gojs'
+import { TemplateMaker, Maps } from '@/map'
+import ABC from '@/map'
 import Parse from 'parse'
 import Http from '@/api/common.js'
 import _ from 'lodash'
-import helper from '@/helper'
 import Vue from 'vue'
-import ImageModal from './ImageModal'
-import { constants } from 'crypto';
+import PictureCreate from './PictureCreate'
+import { mapGetters } from 'vuex';
 
-const { GraphObject } = Go
-const { make: $ } = GraphObject
+const $ = Go.GraphObject.make
 const ShapeClass = Parse.Object.extend('shape')
 const ShapeQuery = new Parse.Query(ShapeClass)
 const CategoryClass = Parse.Object.extend('shapeCategory')
@@ -127,133 +94,81 @@ let groupMap = [];
 
 export default {
   components: {
-    ImageModal
+    PictureCreate
   },
   data () {
     return {
-      shapeMetadata: null,
-      checkCategories: [],
-      createCategoryName: null,
-      shapeModel: {},
-      isCreateShape: false,
-      shapeList: [],
+      selectTab: 'SHAPES',
       categories: [],
-      selectCategories: [],
-      allCategories: [],
+      expandCategory: [],
       picturePageIndex: 0,
       picturePageSize: 10,
       pictures: [],
       pictureHasMore: false
     }
   },
+
+  async created () {
+
+  },
+  computed: {
+    ...mapGetters({
+      style: 'style/predefine',
+      map: 'drawing/map'
+    })
+  },
   watch: {
-    checkCategories (val) {
-      this.shapeModel.shapeCategory = _.filter(this.allCategories, (category) => _.includes(val, category.id))
-    },
-    shapeMetadata (val) {
-      try {
-        this.shapeModel.model = JSON.parse(val)
-      } catch (error) { }
+    map () {
+      this.fetchShapes(this.map.name)
     }
   },
-  async created () {
-    this.allCategories = await new Parse.Query(CategoryClass).find()
-  },
   methods: {
-    ...helper,
     async showNode (palette, shape) {
-      let { category, model, objectId: id, name } = shape
+      let { category, model, objectId: id, name, xml } = shape
       let parser = new DOMParser()
 
       model = {
         ...model,
+        category,
+        name,
         zOrder: 0
       }
 
-      switch (category) {
-        case 'MonoCanvas':
-        case 'ColorCanvas':
-          let xml = await this.$http.get(`${VUE_APP_OSS_URL}/canvas/${id}.svg`)
-          let dom = parser.parseFromString(xml.data, 'text/xml')
-          var svg = dom.getElementsByTagName('svg')[0]
-          var paths = svg.getElementsByTagName('path')
-
-          var itemArray = _.map(svg.getElementsByTagName('path'), (path) => {
-            return {
-              geometryString: go.Geometry.fillPath(path.getAttribute('d')),
-              fill: path.getAttribute('fill')
-            }
-          })
-
-
-          palette.model.addNodeData({
-            ...model,
-            category,
-            itemArray,
-            name: name,
-            source: `${VUE_APP_OSS_URL}/canvas/${id}.svg`,
-          })
-          break;
-        case 'Picture':
-          palette.model.addNodeData({
-            ...model,
-            name: name,
-            source: `${VUE_APP_OSS_URL}/picture/testUser/${id}.png`,
-            category: 'Picture',
-          })
-          break;
-
-        default:
-          console.log(shape)
-          let data = {
-            ...model,
-            name,
-            category
+      if (!_.isEmpty(xml)) {
+        let dom = parser.parseFromString(xml, 'text/xml')
+        var svg = dom.getElementsByTagName('svg')[0]
+        var paths = svg.getElementsByTagName('path')
+        var itemArray = _.map(svg.getElementsByTagName('path'), (path) => {
+          return {
+            geometryString: go.Geometry.fillPath(path.getAttribute('d')),
+            fill: path.getAttribute('fill')
           }
-          console.log(data)
-          palette.model.addNodeData(data)
-          break;
+        })
+
+        _.set(model, 'itemArray', itemArray)
       }
+
+      palette.model.addNodeData(model)
+    },
+    _get (object, key) {
+      return _.get(object, key)
     },
     onChangeTab () {
+      this.selectTab = 'PICTURES'
       this.$nextTick(() => {
         $picture.layoutDiagram()
       })
     },
-    onChange () {
+    onChangeCollapse (ids) {
       this.$nextTick(() => {
-        _.each(this.selectCategories, (name) => {
-          palettes[name].layoutDiagram()
+        _.each(ids, (id) => {
+          palettes[id].layoutDiagram()
         })
       })
 
     },
     handleUpload () {
       this.$refs.imageModal.show()
-    },
-    handleCreateShape () {
-      this.isCreateShape = true
-    },
-    handleCreateCategory () {
-      this.isCreateCategory = true
-    },
-    async handleSaveCategory () {
-      await ShapeCategoryApi.save({
-        name: this.createCategoryName
-      })
-
-      this.allCategories = await new Parse.Query(CategoryClass).find()
-
-      this.$notify.success('Success！');
-    },
-    async handleSaveShape () {
-      if (_.isEmpty(this.shapeModel.model)) {
-        return this.$message.error('Invalid json data');
-      }
-
-      await ShapeApi.save(this.shapeModel)
-
-      this.$notify.success('Success !');
     },
     async showMore (category) {
       var $viewTag = {
@@ -269,11 +184,13 @@ export default {
         $viewTag.isLoading = true
 
         const palette = palettes[category.objectId]
-        const shapes = await Parse.Cloud.run('shapesForCategory', { category: category.objectId, index: $viewTag.pageIndex, size: $viewTag.pageSize })
+        const shapes = await Parse.Cloud.run('shapesForCategory', { category: category.objectId, index: $viewTag.pageIndex, map: mapCategory, size: $viewTag.pageSize })
 
         if (shapes.length > 0) {
           _.each(shapes, (shape) => {
-            this.showNode(palette, shape)
+            if (shape.allowCreate === true) {
+              this.showNode(palette, shape)
+            }
           })
           $viewTag.pageIndex++
         } else {
@@ -288,32 +205,44 @@ export default {
         throw error
       }
     },
-    async fetchShapes () {
-      const categories = await Parse.Cloud.run('shapesWithCategory')
+    async fetchShapes (mapCategory) {
+      var categories = await Parse.Cloud.run('shapesWithCategory', { map: mapCategory })
       this.categories = _.map(categories, (category) => {
         return category
       })
 
+      var style = await this.$store.dispatch('style/getPredefine')
+      var mapping = new TemplateMaker(style.get('model')).makeNodeTemplates()
+      var expands = []
+
       this.$nextTick(() => {
         _.each(this.categories, (category) => {
+          if (category.isExpand) {
+            expands.push(category.objectId)
+          }
+
           var palette = $(Go.Palette, `plette_${category.objectId}`,
             {
-              nodeTemplateMap: map,
+              ...mapping
             })
 
           palettes[category.objectId] = palette
 
           _.each(category.shapes, (shape) => {
-            this.showNode(palette, shape)
+            if (shape.allowCreate === true) {
+              this.showNode(palette, shape)
+            }
           })
         })
+
+        this.expandCategory = [...expands]
 
       })
     },
     async handleDeletePicture (shape) {
       this.$confirm('删除后无法还原，继续吗?')
         .then(_ => {
-          console.log(shape)
+          //console.log(shape)
         })
         .catch(_ => { });
     },
@@ -356,61 +285,53 @@ export default {
       _.each(this.pictures, (picture) => {
         this.showNode($picture, picture)
       })
-
-
     }
   },
   mounted () {
-    this.fetchShapes()
     this.fetchPictures()
+  },
+  beforeDestroy () {
+    _.each(palettes, (palette) => {
+      palette.div = null
+    })
   }
 }
 </script>
 
 <style lang="scss" scoped>
-#sideCanvas {
-  height: 100vh;
-}
+@import "@/style/variables.scss";
+section.shape-bar {
+  background: $--background-color-base;
 
-.container {
-  border-radius: 6px;
-}
+  .tabs {
+    padding: 16px 12px;
+    button.tab {
+      transition: all 0.3s;
+      border: none;
+      margin: 0;
+      padding: 10px 14px;
+      border-radius: 24px;
+      background: transparent;
+      font-size: 18px;
+      cursor: pointer;
+      color: $--color-primary;
 
-.el-button.more {
-  font-size: 24px;
-}
+      &.is-active {
+        background: $--color-primary;
+        color: $--color-white;
+      }
+    }
 
-.tool {
-  height: 40px;
-  line-height: 40px;
-  padding: 6px 12px;
-  background: #f5f7fa;
-
-  i.fa {
-    cursor: pointer;
-    color: #666;
-    border-radius: 112px;
-    border: solid 1px #ccc;
-    width: 26px;
-    height: 26px;
-    text-align: center;
-    line-height: 26px;
-    margin-right: 6px;
-    background: #fff;
-
-    &:hover {
-      border-color: #409eff;
-      box-shadow: 3px 3px 6px -3px #409eff;
-      color: #fff;
-      background: #409eff;
+    div.tab {
+      margin-top: 12px;
     }
   }
 }
 </style>
-<style lang="scss">
-.shape-bar {
-  background: #fff;
 
+<style lang="scss">
+@import "@/style/variables.scss";
+section.shape-bar {
   .el-collapse {
     .el-collapse-item {
       div[role="button"] {
@@ -418,25 +339,47 @@ export default {
         padding-right: 12px;
 
         &:hover {
-          color: #409eff;
+          color: $--color-primary;
+
+          .el-collapse-item__arrow {
+            opacity: 1;
+          }
         }
       }
 
       .el-collapse-item__content {
         padding-bottom: 0;
       }
+
+      &.is-active {
+        .el-collapse-item__arrow {
+          opacity: 1;
+        }
+      }
+    }
+
+    .el-collapse-item__header {
+      background: #fcfcf9;
+      border: none;
+    }
+
+    .el-collapse-item__wrap {
+      background: #fcfcf9;
+    }
+
+    .el-collapse-item__arrow {
+      background: $--color-white;
+      padding: 2px;
+      border-radius: 4px;
+      color: $--color-primary;
+      opacity: 0;
+      transition: all 0.3s;
+      text-align: center;
     }
   }
 
-  .el-tabs {
-    .el-tabs__header {
-      margin: 0;
-
-      &.is-top {
-        padding: 0 12px;
-        background: #f5f7fa;
-      }
-    }
+  .el-collapse {
+    border: 0;
   }
 }
 </style>

@@ -1,4 +1,4 @@
-@import "./scrollbar.css";
+@import "./variables.scss";
 
 body,
 html {
@@ -10,13 +10,295 @@ html {
 
 * {
   letter-spacing: 1px;
+  outline: none;
 }
 
 [v-cloak] {
   display: none;
 }
+
+.logo {
+  background: url(../assets/logo.png);
+  background-repeat: no-repeat;
+  background-size: 45px 45px;
+  padding-left: 50px;
+  background-position: 0;
+  cursor: pointer;
+  height: 60px;
+  margin: 0;
+  vertical-align: middle;
+  line-height: 60px;
+  font-size: 18px;
+  font-weight: 200;
+
+  label {
+    color: #fff;
+    border-top: solid 1px #fff;
+    border-bottom: solid 1px #fff;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 28px;
+  }
+
+  &.dark {
+    label {
+      color: #666;
+      border-top: solid 1px #666;
+      border-bottom: solid 1px #666;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+  }
+}
+
+.content-tip {
+  color: $--color-info;
+  margin: 36px 42px;
+  text-align: center;
+
+  p {
+    min-width: 120px;
+    display: inline-block;
+    padding: 36px 48px;
+    background: #f3f2e962;
+    border-radius: 16px;
+    text-align: center;
+
+    .iconfont {
+      font-size: 32px;
+      vertical-align: middle;
+    }
+  }
+}
+
+.tip {
+  color: $--color-info;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: #f3f2e962;
+  font-size: 12px;
+
+  &[primary] {
+    color: $--color-white;
+    background: $--color-primary;
+
+    button {
+      color: $--color-white;
+
+      &:hover {
+        color: darken($--color-white, 20%);
+      }
+    }
+  }
+
+  h2 {
+    font-size: 18px;
+    font-weight: normal;
+  }
+
+  &[center] {
+    text-align: center;
+  }
+
+  .iconfont {
+    font-size: 16px;
+    vertical-align: middle;
+  }
+}
+
+button {
+  &.button {
+    background: $--color-info;
+    color: $--color-white;
+    border: none;
+    cursor: pointer;
+    padding: 16px 24px;
+    border-radius: 6px;
+
+    &[primary] {
+      background: $--color-primary;
+    }
+
+    &[secondary] {
+      background: $--color-secondary;
+    }
+  }
+
+  &.text {
+    border: none;
+    background: transparent;
+    color: $--color-text-primary;
+    cursor: pointer;
+    padding: 12px;
+    transition: all 0.3s;
+
+    &[secondary] {
+      color: $--color-secondary;
+    }
+
+    &:hover {
+      color: $--color-primary;
+    }
+
+    &:disabled {
+      color: $--color-text-secondary;
+      cursor: not-allowed;
+
+      &:hover {
+        color: $--color-text-secondary;
+      }
+    }
+  }
+}
+
+// form[column],
+// form {
+//   margin: 24px 0;
+//   padding: 0 16px;
+//   .control {
+//     display: flex;
+//     flex-direction: row;
+//     padding: 12px 16px;
+//     line-height: 42px;
+//     background: $--background-color-base;
+
+//     label {
+//       color: $--color-text-regular;
+//       width: 80px;
+//       display: inline-block;
+//     }
+
+//     input,
+//     select {
+//       flex-grow: 1;
+//       background: lighten($--background-color-base, 20%);
+//       display: inline-block;
+//       border: none;
+//       border-radius: 20px;
+//       height: 40px;
+//       padding: 0 18px;
+//       transition: all 0.3s;
+//       border: solid 1px transparent;
+//       max-width: 320px;
+
+//       &:hover {
+//         background: lighten($--background-color-base, 10%);
+//       }
+
+//       &:focus {
+//         border-color: $--color-secondary;
+//       }
+//     }
+//   }
+// }
+
+span.tag {
+  padding: 12px 16px;
+  background: lighten($--color-info, 20%);
+  color: $--color-info;
+
+  &[primary] {
+    background: lighten($--color-primary, 20%);
+    color: $--color-primary;
+  }
+
+  &[warning] {
+    background: lighten($--color-warning, 20%);
+    color: $--color-warning;
+  }
+
+  &[success] {
+    background: lighten($--color-success, 20%);
+    color: $--color-success;
+  }
+}
+
+div.tabs {
+  text-align: center;
+
+  .buttons > button,
+  button.tab {
+    font-size: 14px;
+    padding: 0;
+    transition: all 0.3s;
+    background: $--background-color-base;
+    color: $--color-text-primary;
+    height: 45px;
+    cursor: pointer;
+    padding: 0 16px;
+    border: 0;
+
+    & + button {
+      margin-left: -4px;
+    }
+
+    &:active {
+      background: darken($--color-secondary, 10%);
+      color: $--color-white;
+    }
+
+    &:hover {
+      background: lighten($--color-secondary, 10%);
+      color: $--color-white;
+    }
+
+    &.select {
+      background: $--color-secondary;
+      color: $--color-white;
+    }
+
+    &:first-of-type {
+      border-top-left-radius: 24px;
+      border-bottom-left-radius: 24px;
+    }
+
+    &:last-of-type {
+      border-top-right-radius: 24px;
+      border-bottom-right-radius: 24px;
+    }
+  }
+
+  div.panel {
+    text-align: left;
+    padding: 16px;
+  }
+}
+
+.text-right {
+  text-align: right;
+}
 .text-center {
   text-align: center;
+}
+.inline-block {
+  display: inline-block;
+}
+
+.float-right {
+  float: right;
+}
+
+.el-message {
+  padding: 12px;
+  width: auto;
+  border: 0;
+  background: #fff;
+  min-width: 80px;
+}
+
+.el-dialog,
+.el-message-box {
+  border-radius: 12px;
+  // box-shadow: 0 0 6px 3px #409eff !important;
+  box-shadow: 0 0 6px 3px #999 !important;
+  // margin-top: 0 !important;
+  // top: 0 !important;
+}
+
+.el-popover {
+  .wrapper {
+    padding: 6px 16px;
+  }
 }
 // .el-input__inner,
 // .el-textarea__inner {
@@ -35,3 +317,10 @@ html {
 // .el-textarea__inner {
 //   border-bottom-right-radius: 0;
 // }
+
+.goTXarea {
+  //width: auto !important;
+  padding: 6px;
+  box-shadow: 3px 3px 6px #ccc;
+  background: #fff;
+}

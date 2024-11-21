@@ -1,0 +1,23 @@
+$--font-path: "~element-ui/lib/theme-chalk/fonts";
+$--color-primary: #00a6ed;
+$--color-secondary: #00a6ed;
+$--color-success: #7fb800;
+$--color-error: #ffb400;
+$--color-warn: #c9444d;
+$--color-white: #fff;
+$--background-color-base: #f3f3f3;
+
+/// color||Color|0
+$--button-primary-border-color: $--color-secondary;
+/// color||Color|0
+$--button-primary-background-color: $--color-secondary;
+
+// Box-shadow
+/// boxShadow|1|Shadow|1
+$--box-shadow-base: 0 0 12px 0 rgba(0, 0, 0, 0.3) !default;
+// boxShadow|1|Shadow|1
+$--box-shadow-dark: 0 0 12px 0 rgba(0, 0, 0, 0.3) !default;
+/// boxShadow|1|Shadow|1
+$--box-shadow-light: 0 0 12px 0 rgba(0, 0, 0, 0.3) !default;
+
+@import "~element-ui/packages/theme-chalk/src/index";

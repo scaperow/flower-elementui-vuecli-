@@ -1,186 +1,211 @@
 <template>
-  <div class="setting-bar">
-    <el-tabs tab-position="left">
-      <el-tab-pane v-show="selectObjects.count > 0">
-        <el-tooltip slot="label"
-                    placement="left"
-                    content="当前图形">
-          <span><i class="fa  fa-check-square"></i></span>
-        </el-tooltip>
-        <el-form size="mini">
-          <el-divider content-position="center">背景</el-divider>
-          <div class="form-group">
-            <el-form-item label="填充颜色"
-                          v-show="hasStyle('fill')">
-              <el-color-picker :predefine="predefineColors"
-                               @change="setStyle('fill')"
-                               v-model="selectionStyle.fill"></el-color-picker>
-            </el-form-item>
-            <el-form-item label="渐变颜色"
-                          v-show="selectionStyle.linear">
-              <el-color-picker color-format="hex"
-                               v-model="selectionStyle.linear"
-                               @change="setStyle('shading')">
-              </el-color-picker>
-            </el-form-item>
-
-            <el-form-item label="透明度"
-                          v-show="hasStyle('opacity')">
-              <div style="margin:12px 12px  0 12px">
-                <el-slider v-model="selectionStyle.opacity"
-                           @change="setStyle('opacity')"
-                           :step="0.1"
-                           :min="0.1"
-                           :max="1"
-                           :format-tooltip="(value)=>(value * 100) + '%'"></el-slider>
-              </div>
-            </el-form-item>
-          </div>
-
-          <el-divider content-position="center">边框</el-divider>
-          <div class="form-group">
-            <el-form-item label="样式"
-                          v-show="hasStyle('stroke')">
-
-            </el-form-item>
-            <el-form-item label="宽度"
-                          v-show="hasStyle('strokeWidth')">
-              <el-input-number v-model="selectionStyle.strokeWidth"
-                               :min="0"
-                               :max="100"
-                               @change="setStyle('strokeWidth')"></el-input-number>
-            </el-form-item>
-            <el-form-item label="颜色"
-                          v-show="hasStyle('stroke')">
-              <el-color-picker color-format="hex"
-                               v-model="selectionStyle.stroke"
-                               @change="setStyle('stroke')">
-              </el-color-picker>
-            </el-form-item>
-          </div>
-
-          <el-divider content-position="center">数据</el-divider>
-          <div class="form-group">
-            <el-form-item label="文本内容"
-                          v-show="hasStyle('text')">
-              <el-input type="textarea"
-                        autosize
-                        v-model="selectionStyle.text"
-                        @change="setStyle('text')">
-              </el-input>
-            </el-form-item>
-            <el-form-item label="文本颜色"
-                          v-show="hasStyle('fontColor')">
-              <el-color-picker color-format="hex"
-                               v-model="selectionStyle.fontColor"
-                               @change="setStyle('fontColor')">
-              </el-color-picker>
-            </el-form-item>
-          </div>
-        </el-form>
-      </el-tab-pane>
-      <el-tab-pane>
+  <section v-if="setting && map"
+           class="setting-bar">
+    <div class="tabs is-vertical">
+      <div class="side">
         <el-tooltip slot="label"
                     placement="left"
                     content="页面设置">
-          <span><i class="fa fa-file"></i></span>
+          <button class="tab"
+                  @click="selectTab ='SETTING'"
+                  :class="{'active':selectTab==='SETTING'}"><i class="iconfont icon-setting"></i></button>
         </el-tooltip>
 
-        <el-form size="mini"
-                 label-position="left"
-                 label-width="80px">
-          <el-divider content-position="center">页面</el-divider>
-          <el-form-item size="mini"
-                        label="尺寸">
-            <el-select v-model="setting.root.size">
-              <el-option label="自定义"
-                         :value="null">
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item size="mini"
-                        label="方向">
-            <el-radio-group v-model="setting.root.direction">
-              <el-radio-button :disabed="!setting.root.size"
-                               label="H"><i class=""></i> 水平</el-radio-button>
-              <el-radio-button :disabed="!setting.root.size"
-                               label="V"><i class=""></i> 垂直</el-radio-button>
-            </el-radio-group>
-          </el-form-item>
-
-          <el-form-item size="mini"
-                        label="单位">
-            <el-select v-model="setting.root.units">
-              <el-option value="in"><i class=""></i> in</el-option>
-              <el-option value="cm"><i class=""></i> cm</el-option>
-              <el-option value="px"><i class=""></i> px</el-option>
-              <el-option value="pt"><i class=""></i> pt</el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item size="mini"
-                        label="背景">
-            <el-color-picker @change="(color)=>change({'root.background': color})"
-                             :predefine="predefineColors"
-                             :value="setting.root.background"
-                             show-alpha></el-color-picker>
-          </el-form-item>
-
-          <el-divider content-position="center">网格</el-divider>
-          <el-form-item size="mini"
-                        label="网格">
-            <el-checkbox border
-                         @change="(value)=>change({'root.showMesh':value})"
-                         v-model="setting.root.showMesh"></el-checkbox>
-          </el-form-item>
-          <el-form-item size="mini"
-                        label="颜色">
-            <el-color-picker :disabled="!setting.root.showMesh"
-                             @change="(value)=>change({'root.meshColor':value})"
-                             show-alpha
-                             v-model="setting.root.meshColor"></el-color-picker>
-          </el-form-item>
-
-          <el-divider content-position="center">参考线</el-divider>
-          <el-form-item size="mini"
-                        label="参考线">
-            <el-checkbox border
-                         @change="(value)=>change({'root.showRule':value})"
-                         v-model="setting.root.showRule"></el-checkbox>
-          </el-form-item>
-          <el-form-item size="mini"
-                        label="颜色">
-            <el-color-picker :predefine="predefineColors"
-                             :disabled="!setting.root.showRule"
-                             @change="(value)=>change({'root.ruleColor':value})"
-                             v-model="setting.root.ruleColor"
-                             show-alpha></el-color-picker>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
-      <el-tab-pane>
         <el-tooltip slot="label"
                     placement="left"
                     content="历史记录">
-          <span><i class="fa fa-history"></i></span>
+          <button class="tab"
+                  @click="selectTab ='HISTORY'"
+                  :class="{'active':selectTab==='HISTORY'}"><i class="iconfont icon-history"></i></button>
         </el-tooltip>
-      </el-tab-pane>
-      <el-tab-pane>
+
         <el-tooltip slot="label"
                     placement="left"
                     content="主题">
-          <span><i class="fa fa-file"></i></span>
+          <button class="tab"
+                  @click="selectTab ='STYLE'"
+                  :class="{'active':selectTab==='STYLE'}"><i class="iconfont icon-theme"></i></button>
         </el-tooltip>
-      </el-tab-pane>
-      <el-tab-pane>
+
         <el-tooltip slot="label"
                     placement="left"
                     content="图层">
-          <span><i class="fa fa-copy"></i></span>
+          <button class="tab"
+                  @click="selectTab ='LAYER'"
+                  :class="{'active':selectTab==='LAYER'}"><i class="iconfont icon-layer"></i></button>
         </el-tooltip>
-      </el-tab-pane>
+      </div>
 
-    </el-tabs>
-  </div>
+      <div class="content">
+        <div class="tab"
+             v-show="selectTab==='SETTING'">
+          <div class="title">
+            页面设置
+          </div>
+          <el-form size="mini"
+                   label-position="left"
+                   label-width="80px">
+            <div class="form-group">
+              <h4>页面</h4>
+              <el-form-item size="mini"
+                            label="尺寸">
+                <el-select @change="(value)=>onChangeSize(value)"
+                           :value="setting.size">
+                  <el-option v-for="(size,index) in pageSizes"
+                             :key="index"
+                             :value="size.key"
+                             :label="`${size.label} ${(size.width && size.height)? (size.width +'px' +' x ' +size.height + 'px'):''}`">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="高度"
+                            v-show="setting.size === 'CUSTOM'">
+                <el-input type="number"
+                          v-model="height">
+                  <template slot="append">px</template></el-input>
+              </el-form-item>
+              <el-form-item label="宽度"
+                            v-show="setting.size === 'CUSTOM'">
+                <el-input type="number"
+                          v-model="width">
+                  <template slot="append">px</template>
+                </el-input>
+              </el-form-item>
+              <el-form-item size="mini"
+                            v-show="setting.size !== 'AUTO'"
+                            label="方向">
+                <el-radio-group v-model="direction">
+                  <el-radio-button label="H"> 水平</el-radio-button>
+                  <el-radio-button label="V"> 垂直</el-radio-button>
+                </el-radio-group>
+              </el-form-item>
+
+              <!-- <el-form-item size="mini"
+                          label="单位">
+              <el-select v-model="setting.units">
+                <el-option value="in"><i class=""></i> in</el-option>
+                <el-option value="cm"><i class=""></i> cm</el-option>
+                <el-option value="px"><i class=""></i> px</el-option>
+                <el-option value="pt"><i class=""></i> pt</el-option>
+              </el-select>
+            </el-form-item> -->
+              <el-form-item size="mini"
+                            label="颜色">
+                <el-color-picker @change="(color)=>changeSetting('background', color)"
+                                 :predefine="predefineColors"
+                                 :value="setting.background"
+                                 show-alpha></el-color-picker>
+              </el-form-item>
+            </div>
+
+            <div class="form-group">
+              <h4>网格 <el-button @click="changeSetting('showMesh', !setting.showMesh)"
+                           type="text">{{setting.showMesh?'隐藏网格':'显示网格'}}</el-button>
+              </h4>
+
+              <el-form-item size="mini"
+                            label="颜色"
+                            v-show="setting.showMesh">
+                <el-color-picker @change="(value)=>changeSetting('meshColor',value)"
+                                 show-alpha
+                                 :value="meshColor"></el-color-picker>
+              </el-form-item>
+            </div>
+
+            <div class="form-group">
+              <h4>参考线 <el-button @click="changeSetting('showRule', !setting.showRule)"
+                           type="text">{{setting.showRule?'隐藏参考线':'显示参考线'}}</el-button>
+              </h4>
+
+              <el-form-item size="mini"
+                            v-show="setting.showRule"
+                            label="颜色">
+                <el-color-picker :predefine="predefineColors"
+                                 @change="(value)=>changeSetting('ruleColor',value)"
+                                 :value="ruleColor"
+                                 show-alpha></el-color-picker>
+              </el-form-item>
+            </div>
+          </el-form>
+        </div>
+        <div class="tab"
+             v-show="selectTab==='HISTORY'"
+             v-loading="isLoadingHistory">
+          <div class="title">
+            历史记录
+          </div>
+          <p class="tip"
+             center
+             v-show="historyList.length ===0">
+            暂无记录
+          </p>
+          <el-timeline :reverse="true"
+                       v-show="historyList.length > 0"
+                       class="histories">
+            <el-timeline-item v-for="(history,index) in historyList"
+                              :key="index"
+                              :timestamp="new Date(history.get('updatedAt')).getTime() | date('yyyy-MM-dd HH:mm:ss')"
+                              placement="top">
+              <div class="history"
+                   @click="previewHistory(history)"
+                   :class="{'active':currentHistory && history.id === currentHistory.id}">
+                {{history.get('note') || '自动保存'}}
+                <div class="buttons text-right">
+                  <!-- <el-popover>
+                    <div>
+                      <div>是否删除该历史记录?</div>
+                      <div class="text-right">
+                        <button text
+                                primary
+                                @click="removeHistory(history,index)">是</button>
+                        <button text>否</button>
+                      </div>
+                    </div>
+                    <button text
+                            slot="reference">删除</button>
+                  </el-popover> -->
+                  <button text
+                          @click="removeHistory(history,index)">删除</button>
+                </div>
+              </div>
+            </el-timeline-item>
+          </el-timeline>
+          <p class="text-center"
+             v-show="historyList.length  >= 20">
+            最多可显示 20 条历史记录
+
+          </p>
+          <div class="text-center"
+               style="margin-top:42px">
+            <!-- <button round
+                    primary
+                    @click="getHistories">
+              <i class="iconfont icon-refresh"></i>
+              刷新</button> -->
+          </div>
+        </div>
+        <div class="tab"
+             v-show="selectTab==='STYLE'">
+          <div class="title">
+            历史记录
+          </div>
+          <div v-for="(style,index) in styleList"
+               class="style"
+               :key="index"
+               @click="setStyle(style)">
+            <div class="wrapper"
+                 :id="`style_canvas_${style.objectId}`">
+            </div>
+            <label>{{style.name}}</label>
+          </div>
+        </div>
+        <div class="tab"
+             v-show="selectTab === 'LAYER'">
+
+        </div>
+      </div>
+    </div>
+  </section>
 </template>
 <script>
 /**
@@ -190,33 +215,27 @@
  */
 import Parse from 'parse'
 import _ from 'lodash'
+import Go from 'gojs'
 import { mapGetters, mapActions } from 'vuex'
-let setting = {
-  // page setting
-  root: {
-    direction: 'H',
-    size: null,
-    units: 'px',
-    showRule: true,// 是否显示参考线
-    showMesh: true,// 是否显示网格
-    meshColor: '#409EFF',
-    ruleColor: '#000'
-  },
-  // default setting
-  common: {
-    fontSize: '12px'
-  },
-  canvas: {
-  },
-  shape: {
-  },
-}
-let styleForCategory = {
-  picture: ['fill', 'stroke', 'strokeWidth', 'opacity', 'text', 'fontColor'],
-  monocanvas: ['fill', 'linear', 'strokeWidth', 'stroke', 'opacity', 'shadow', 'text', 'fontColor'],
-  colorcanvas: ['opacity', 'text', 'fontColor'],
-  shape: ['fill', 'linear', 'strokeWidth', 'opacity', 'stroke', 'text', 'fontColor']
-}
+import { TemplateMaker } from '@/map'
+import Pixel from 'unit-to-px'
+
+const StyleClass = Parse.Object.extend('style')
+const HistoryClass = Parse.Object.extend('history')
+const StyleCanvasModel = `{ "class": "GraphLinksModel",
+  "nodeDataArray": [ 
+{"figure":"Circle", "zOrder":0, "name":"结束", "category":"Shape", "key":-2, "location":"0 0", "size":"50 50"},
+{"figure":"Diamond", "zOrder":0, "name":"判定", "category":"Shape", "key":-3, "location":"0 100", "size":"50 50"},
+{"figure":"Circle", "zOrder":0, "name":"开始", "category":"Shape", "key":-1, "location":"100 0", "size":"50 50"}
+ ],
+  "linkDataArray": [ 
+{"from":-2, "to":-3, "points":[-140,201.5,-140,211.5,-140,218.5,-140,218.5,-140,225.5,-140,235.5]},
+{"from":-3, "to":-1, "points":[-104.5,270,-94.5,270,-86,270,-86,270,-77.5,270,-67.5,270]}
+ ]}`;
+
+const $ = Go.GraphObject.make;
+
+let palettes = {}
 let predefineColors = [
   '#ff4500',
   '#ff8c00',
@@ -233,119 +252,242 @@ let predefineColors = [
   'hsla(209, 100%, 56%, 0.73)',
   '#c7158577'
 ]
+let pageSizes = [{
+  key: 'AUTO',
+  label: '自适应'
+}, {
+  key: 'A3',
+  label: 'A3',
+  width: parseInt(Pixel('297mm')),
+  height: parseInt(Pixel('420mm')),
+}, {
+  key: 'A4',
+  label: 'A4',
+  width: parseInt(Pixel('210mm')),
+  height: parseInt(Pixel('297mm')),
+}, {
+  key: 'A5',
+  label: 'A5',
+  width: parseInt(Pixel('148mm')),
+  height: parseInt(Pixel('210mm')),
+}, {
+  key: 'CUSTOM',
+  label: '自定义'
+}]
 
 // Every nodeData which category name will be as 'Key'
-
 
 export default {
   data () {
     return {
-      styles: {},
-      setting,
-      predefineColors
-    }
-  },
-  mounted () {
-  },
-  created () {
-    //var userSetting = null
-
-  },
-  methods: {
-    ...mapActions({
-      change: 'drawing/setSetting',
-    }),
-
-    hasStyle (key) {
-      return _.has(this.selectionStyle, key)
-    },
-    getStyle (styleName, part) {
-      switch (styleName) {
-        case 'fill':
-          switch (part.category) {
-            case 'Shape':
-              return part.data.fill
-              break;
-
-            case 'MonoCanvas':
-              return part.data.itemArray[0].fill
-              break;
-
-            default:
-              return null
-          }
-      }
-    },
-
-    setStyle (styleName) {
-      let value = _.get(this.selectionStyle, styleName)
-      this.canvas.startTransaction("设置样式");
-      this.selectObjects.each(object => {
-        object.data[styleName] = value
-        object.updateTargetBindings()
-      })
-      this.canvas.commitTransaction("设置样式");
+      selectTab: 'SETTING',
+      pageSizes,
+      historyList: [],
+      styleList: [],
+      predefineColors,
+      isLoadingHistory: false,
     }
   },
   watch: {
-    selectObjects () {
+    map () {
+      this.getStyles()
+    },
+    selectTab () {
+      switch (this.selectTab) {
+        case 'STYLE':
+          this.$nextTick(() => {
+            _.each(palettes, (canvas) => {
+              canvas.layoutDiagram()
+            })
+          })
+          break;
 
+        case 'HISTORY':
+          this.getHistories()
+      }
+    }
+  },
+  methods: {
+    async previewHistory (history) {
+      var historyModel = null
+
+      if (history && !history.has('raw')) {
+        try {
+          await history.fetchWithInclude('raw')
+        } catch ({ message }) {
+          this.$message.error(message)
+        }
+      }
+
+
+      this.$store.dispatch('drawing/setHistory', history)
+    },
+    async removeHistory (history, index) {
+      try {
+        await history.destroy()
+
+        this.historyList.splice(index, 1)
+        this.$notify.success('已删除')
+      } catch (error) {
+        this.$message.error(error.message)
+      }
+
+      // 数组移除，此处 index 不用修改即可取下一条数据
+      this.previewHistory(this.historyList[index] || null)
+    },
+    onChangeSize (size) {
+      var { width, height } = _.find(this.pageSizes, { key: size })
+      var changes = {
+        size: size
+      }
+
+      switch (size) {
+        case 'AUTO':
+          changes.width = '100%'
+          changes.height = '100%'
+          break;
+
+        case 'CUSTOM':
+          changes.width = this.map.canvas.div.offsetWidth + 'px'
+          changes.height = this.map.canvas.div.offsetHeight + 'px'
+          break;
+
+        default:
+          changes.width = parseInt(width) + 'px'
+          changes.height = parseInt(height) + 'px'
+
+          break;
+      }
+
+      this.map.changeSetting(changes)
+    },
+    changeSetting (key, value) {
+      this.map.changeSetting({
+        [key]: value
+      })
+    },
+    async getStyles () {
+      var styles = await new Parse.Query(StyleClass).find()
+      this.styleList = _.map(styles, style => style.toJSON())
+      this.$nextTick(() => {
+        _.each(this.styleList, style => {
+          let styleCanvas = $(Go.Palette, `style_canvas_${style.objectId}`,
+            {
+              layout: new go.Layout(),
+              allowDragOut: false,
+              allowHorizontalScroll: false,
+              allowVerticalScroll: false,
+              viewSize: new go.Size(100, 100),
+              initialPosition: new go.Point(0, 0),
+              position: new go.Point(0, 0),
+            })
+
+          var templateMaker = new TemplateMaker(style)
+          styleCanvas.setProperties(templateMaker.makeNodeTemplates())
+          styleCanvas.model = go.Model.fromJson(StyleCanvasModel)
+          palettes[style.id] = styleCanvas
+        })
+      })
+    },
+    async getHistories () {
+      this.isLoadingHistory = true
+
+      try {
+        var histories = await new Parse.Query(HistoryClass).equalTo('works', this.mapSource).exclude('raw').find()
+        // this.historyList = _.map(histories, history => history.toJSON())
+        this.historyList = histories
+      } catch (error) {
+        this.$message.error(error.message)
+      }
+
+      this.isLoadingHistory = false
     }
   },
   computed: {
     ...mapGetters({
-      selectObjects: 'drawing/selection',
-      canvas: 'drawing/canvas'
+      map: 'drawing/map',
+      mapSource: 'drawing/mapSource',
+      currentHistory: 'drawing/history'
     }),
-    selectionStyle: {
-      set (val) {
-        this.styles = val
+    setting () {
+      if (this.map) {
+        return this.map.setting
+      }
+
+      return null
+    },
+    meshColor () {
+      return _.get(this.map, 'setting.meshColor') || _.get(this.map, 'style.root.MeshColor')
+    },
+    ruleColor () {
+      return _.get(this.map, 'setting.ruleColor') || _.get(this.map, 'style.root.RuleColor')
+    },
+    width: {
+      set (value) {
+        this.changeSetting('width', parseInt(value) + 'px')
       },
       get () {
-        let selection = this.selectObjects.toArray && this.selectObjects.toArray() || []
-        let result = _.chain(selection)
-          .map(item => item.category)
-          .reduce((result, category, index) => {
-            if (index === 0) {
-              return _.get(styleForCategory, category.toLowerCase())
-            } else {
-              return _.intersection(result, _.get(styleForCategory, category.toLowerCase()))
-            }
-          }, [])
-          .reduce((result, styleName, index) => {
-            var styleValues =
-              _.chain(selection)
-                .map((item) => {
-                  return _.get(item.data, styleName)
-                })
-                .uniq()
-                .value()
-
-            result[styleName] = styleValues.length > 1 ? null : styleValues[0]
-
-            return result
-
-          }, {})
-          .value()
-
-        this.styles = result
-
-        return this.styles
+        return parseInt(this.setting.width)
+      }
+    },
+    height: {
+      set (value) {
+        this.changeSetting('height', parseInt(value) + 'px')
+      },
+      get () {
+        return parseInt(this.setting.height)
+      }
+    },
+    direction: {
+      set (value) {
+        this.changeSetting('direction', value)
+      },
+      get () {
+        return this.setting.direction
       }
     }
   }
 }
 </script>
-<style lang="scss">
-.setting-bar {
-  height: 100vh;
-  border-left: 1px solid #ebeef5;
+<style lang="scss" scoped>
+@import "@/style/variables.scss";
+
+section.setting-bar {
+  background: #fcfcf9;
 
   .el-tabs.el-tabs--left {
     height: 100%;
     .el-tabs__header {
-      background: #f5f7fa;
+      background: #fcfcf9;
       margin-right: 0;
+    }
+
+    .el-tabs__content {
+      background: #fcfcf9;
+      height: 100%;
+    }
+    .el-tabs__nav {
+      border: none;
+      border-radius: 50%;
+      margin: 16px 12px;
+
+      .el-tabs__item {
+        width: 34px;
+        height: 34px;
+        border: none;
+        text-align: center;
+        padding: 0;
+        margin: 0;
+        display: block;
+        line-height: 34px;
+        border-radius: 20px;
+        color: $--color-secondary;
+
+        &.is-active {
+          background: $--color-secondary;
+          color: #fff;
+        }
+      }
     }
   }
 
@@ -354,14 +496,178 @@ export default {
       text-align: right;
     }
   }
+
+  div.tabs {
+    &.is-vertical {
+      display: flex;
+      position: relative;
+
+      .side {
+        padding: 12px 6px;
+        text-align: center;
+
+        button.tab {
+          display: block;
+          width: 40px;
+          height: 40px;
+          border: none;
+          border-radius: 40px;
+          background: transparent;
+          transition: all 0.3s;
+          color: $--color-primary;
+          margin: 18px 0;
+          cursor: pointer;
+          text-align: center;
+
+          .iconfont {
+            font-size: 25px;
+            vertical-align: middle;
+          }
+
+          &.active {
+            background: $--color-primary;
+            color: $--color-white;
+          }
+
+          &:hover {
+            color: $--color-primary;
+          }
+        }
+      }
+      .content {
+        flex-grow: 1;
+        padding: 12px;
+        padding-left: 0;
+        position: relative;
+
+        .title {
+          text-align: right;
+          color: $--color-text-secondary;
+          font-size: 14px;
+          margin: 6px 12px;
+        }
+      }
+    }
+
+    button.toggle {
+      width: 35px;
+      height: 35px;
+      border-radius: 35px;
+    }
+
+    button {
+      &[round] {
+        border-radius: 30px;
+      }
+
+      &[primary] {
+        padding: 0;
+        height: 40px;
+        min-width: 80px;
+        font-size: 14px;
+        background: #333;
+        color: #fff;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+
+        &:hover {
+          background: $--color-primary;
+          color: $--color-white;
+        }
+      }
+    }
+  }
 }
 </style >
 <style lang="scss" scoped>
+@import "@/style/variables.scss";
 .form-group {
   background: #f6f6f6;
-  padding: 6px;
+  padding: 6px 12px;
   border-radius: 4px;
-  margin: 12px;
+  margin: 12px 0;
+
+  h4 {
+    margin-top: 6px;
+  }
+}
+
+.style {
+  text-align: center;
+  width: 100px;
+  display: inline-block;
+  margin: 12px 0 12px 6px;
+
+  &:hover {
+    .wrapper {
+    }
+  }
+
+  .wrapper {
+    height: 100px;
+    cursor: pointer;
+    transition: all 0.3s;
+    // border: solid 1px #f3f3f3;
+  }
+  label {
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    // background: #f5f7fa;
+  }
+}
+
+.histories {
+  padding: 0;
+  margin-top: 24px;
+  overflow-y: auto;
+
+  .history {
+    background: #f6f6f6;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 12px 0;
+    transition: all 0.3s;
+    cursor: pointer;
+
+    .buttons {
+      display: none;
+    }
+
+    &:hover {
+      box-shadow: $--box-shadow-base;
+      background: #f0f0f0;
+    }
+
+    &.active {
+      background: #333;
+      color: #fff;
+
+      .buttons {
+        display: block;
+
+        button[text] {
+          color: $--color-white;
+        }
+      }
+    }
+
+    h2 {
+      font-size: 14px;
+      color: #333;
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+      margin-bottom: 6px;
+    }
+
+    label {
+      color: $--color-text-primary;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+  }
 }
 </style>
 

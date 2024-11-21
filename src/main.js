@@ -3,20 +3,39 @@ import Axios from 'axios'
 import VueAxios from 'vue-axios'
 import ElementUI from 'element-ui'
 import VueBus from 'vue-bus'
-import Vuex from 'vuex'
 import VueRouter from 'vue-router'
 import store from './store/'
-import routes from './router/'
+import routes from './router/app'
 import App from './App.vue'
 import VueRx from 'vue-rx'
 
-import 'element-ui/lib/theme-chalk/index.css';
-import 'font-awesome/css/font-awesome.css'
-import '@/style/graph.css'
-import '@/style/index.scss';
+import '@/style/index.scss'
+import '@/style/element.scss'
+import Parse from 'parse'
+
+const { VUE_APP_PARSE_ID, VUE_APP_PARSE_URL, VUE_APP_PARSE_KEY } = process.env
+Parse.initialize(VUE_APP_PARSE_ID, VUE_APP_PARSE_KEY)
+Parse.serverURL = VUE_APP_PARSE_URL
 
 const router = new VueRouter({
   routes // (缩写) 相当于 routes: routes
+})
+
+router.beforeEach(async (to, from, next) => {
+  var accessRoles = _.get(to, 'meta.roles')
+  var { roles } = await store.dispatch('user/getUser')
+
+  if (_.isArray(roles)) {
+    if (_.isEmpty(currentUser)) {
+      return next('/login')
+    } else {
+      if (_.intersection(accessRoles, roles).length <= 0) {
+        return next('/403')
+      }
+    }
+  }
+
+  next()
 })
 
 Vue.config.productionTip = false
